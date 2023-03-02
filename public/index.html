@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            authentication user
+        </title>
+        <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    </head>
+    <body>
+        <button onclick="connect()">login with web3 </button>
+       
+        <script type="text/javascript">
+            let account = null;
+            let accessToken = null;
+            const connect = async ()=> {
+                if (window.ethereum){
+                    await window.ethereum.send('eth_requestAccounts')
+                    window.w3 = new Web3(window.ethereum)
+                    var accounts = await w3.eth.getAccounts()
+                    account =accounts[0];
+                    accessToken = await authenticate()
+                    console.log(accessToken)
+
+
+
+                    let opts ={
+                    method:'GET',
+                    headers: {
+                        'content-Type': "application/json",
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                 }
+                 res = await fetch(`/secret`, opts)
+                 alert(await res.text())
+                 alert(accessToken)
+
+
+                }
+            }
+             const authenticate = async()=>{
+                let res = await fetch(`/nonce?address=${account}`)
+                let resBody = await res.json()
+                let signature =await w3.eth.personal.sign(resBody.message,account)
+
+                 let opts ={
+                    method:'POST',
+                    headers: {
+                        'content-Type': "application/json",
+                        'Authorization': `Bearer ${resBody.tempToken}`
+                    }
+                 }
+                 res = await fetch(`/verify?signature=${signature}`, opts)
+                 resBody = await res.json()
+                 return resBody.token
+
+
+                 console.log(resBody)
+                 console.log(signature)
+             }
+        </script>
+    </body>
+</html>
